@@ -25,13 +25,15 @@ const char *bpName[4] = {"Static", "Gshare",
                          "Tournament", "Custom"};
 
 // define number of bits required for indexing the BHT here.
-int ghistoryBits = 13; // Number of bits used for Global History
+int ghistoryBits = 17; // Number of bits used for Global History
 int bpType;            // Branch Prediction Type
 int verbose;
 
 //Tournament bits.
-int lhistoryBits = 13;
-int pcIndexBits = 14;
+int ghistoryBits_tournament = 16;
+int lhistoryBits = 12;
+int pcIndexBits = 12;
+int choicerBits = 15;
 
 //------------------------------------//
 //      Predictor Data Structures     //
@@ -134,18 +136,22 @@ void cleanup_gshare()
 
 void init_tournament()
 {
-  int global_bht_entries = 1 << ghistoryBits;
+  int global_bht_entries = 1 << ghistoryBits_tournament;
   int local_bht_entries = 1 << lhistoryBits;
+  int choicer_entries = 1 << choicerBits;
   int pc_entries = 1 << pcIndexBits;
   bht_tournament_global = (uint8_t *)malloc(global_bht_entries * sizeof(uint8_t));
   bht_tournament_local = (uint8_t *)malloc(local_bht_entries * sizeof(uint8_t));
-  choicer = (uint8_t *)malloc(global_bht_entries * sizeof(uint8_t));
+  choicer = (uint8_t *)malloc(choicer_entries * sizeof(uint8_t));
   lht_tournament = (uint64_t *)malloc(pc_entries * sizeof(uint64_t));
   ghistory = 0;
   int i = 0;
   for (i = 0; i < global_bht_entries; i++)
   {
     bht_tournament_global[i] = WN;
+  }
+  for (i = 0; i < choicer_entries; i++)
+  {
     choicer[i] = WN;
   }
   for (i = 0; i < local_bht_entries; i++)
@@ -156,24 +162,25 @@ void init_tournament()
   {
     lht_tournament[i] = 0;
   }
-  printf("Successful");
 }
 
 uint8_t tournament_predict(uint32_t pc)
 {
   uint32_t pc_entries = 1 << pcIndexBits;
   uint32_t local_bht_entries = 1 << lhistoryBits;
+  uint32_t choicer_entries = 1 << choicerBits;
   uint32_t pc_lower_bits = pc & (pc_entries - 1);
   uint64_t local_history_pattern = lht_tournament[pc_lower_bits];
   local_history_pattern = local_history_pattern & (local_bht_entries-1);
   uint8_t local_branch_history = bht_tournament_local[local_history_pattern];
-  uint32_t global_bht_entries = 1 << ghistoryBits;
+  uint32_t global_bht_entries = 1 << ghistoryBits_tournament;
   pc_lower_bits = pc & (global_bht_entries - 1);
   uint32_t ghistory_lower_bits = ghistory & (global_bht_entries - 1);
   uint32_t index = pc_lower_bits ^ ghistory_lower_bits;
   uint8_t global_branch_history = bht_tournament_global[index];
+  uint32_t choicer_index = index & (choicer_entries-1);
   // If choicer is WT or ST, then we choose to use global one.
-  if (choicer[index] > 1)
+  if (choicer[choicer_index] > 1)
   {
     switch (global_branch_history)
     {
@@ -213,15 +220,17 @@ void train_tournament(uint32_t pc, uint8_t outcome)
 {
   uint32_t pc_entries = 1 << pcIndexBits;
   uint32_t pc_lower_bits = pc & (pc_entries - 1);
+  uint32_t choicer_entries = 1 << choicerBits;
   uint32_t local_bht_entries = 1 << lhistoryBits;
   uint64_t local_history_pattern = lht_tournament[pc_lower_bits];
   local_history_pattern = local_history_pattern & (local_bht_entries-1);
   uint8_t local_branch_history = bht_tournament_local[local_history_pattern];
-  uint32_t global_bht_entries = 1 << ghistoryBits;
+  uint32_t global_bht_entries = 1 << ghistoryBits_tournament;
   pc_lower_bits = pc & (global_bht_entries - 1);
   uint32_t ghistory_lower_bits = ghistory & (global_bht_entries - 1);
   uint32_t index = pc_lower_bits ^ ghistory_lower_bits;
   uint8_t global_branch_history = bht_tournament_global[index];
+  uint32_t choicer_index = index & (choicer_entries-1);
   switch (local_branch_history)
   {
   case WN:
@@ -265,19 +274,19 @@ void train_tournament(uint32_t pc, uint8_t outcome)
   {
     if (global_branch_history == outcome)
     {
-      switch (choicer[index])
+      switch (choicer[choicer_index])
       {
       case SN:
-        choicer[index] = WN;
+        choicer[choicer_index] = WN;
         break;
       case WN:
-        choicer[index] = WT;
+        choicer[choicer_index] = WT;
         break;
       case WT:
-        choicer[index] = ST;
+        choicer[choicer_index] = ST;
         break;
       case ST:
-        choicer[index] = ST;
+        choicer[choicer_index] = ST;
         break;
       default:
         printf("Warning: Undefined state of entry in choicer!\n");
@@ -286,19 +295,19 @@ void train_tournament(uint32_t pc, uint8_t outcome)
     }
     else
     {
-      switch (choicer[index])
+      switch (choicer[choicer_index])
       {
       case SN:
-        choicer[index] = SN;
+        choicer[choicer_index] = SN;
         break;
       case WN:
-        choicer[index] = SN;
+        choicer[choicer_index] = SN;
         break;
       case WT:
-        choicer[index] = WN;
+        choicer[choicer_index] = WN;
         break;
       case ST:
-        choicer[index] = WT;
+        choicer[choicer_index] = WT;
         break;
       default:
         printf("Warning: Undefined state of entry in choicer!\n");
