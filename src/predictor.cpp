@@ -382,19 +382,19 @@ uint32_t index_hash(uint32_t pc, uint32_t history, int number)
 {
   if (number == 1)
   {
-    return ((pc * 31) ^ ((history & 0xF) * 17)) & 0xFFF;
+    return ((pc * 31) ^ ((history & 0xF) * 17)) & 0xFFFF;
   }
   if (number == 2)
   {
-    return ((pc * 31) ^ ((history & 0xFF) * 17)) & 0xFFF;
+    return ((pc * 31) ^ ((history & 0xFF) * 17)) & 0xFFFF;
   }
   if (number == 3)
   {
-    return ((pc * 31) ^ ((history & 0xFFFF) * 17)) & 0xFFF;
+    return ((pc * 31) ^ ((history & 0xFFFF) * 17)) & 0xFFFF;
   }
   if (number == 4)
   {
-    return ((pc * 31) ^ (history * 17)) & 0xFFF;
+    return ((pc * 31) ^ (history * 17)) & 0xFFFF;
   }
   return 0;
 }
