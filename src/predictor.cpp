@@ -270,9 +270,37 @@ void train_tournament(uint32_t pc, uint8_t outcome)
   pc_lower_bits = pc & (pc_entries - 1);
   lht_tournament[pc_lower_bits] = ((lht_tournament[pc_lower_bits] << 1) | outcome);
   ghistory = ((ghistory << 1) | outcome);
+  uint8_t score = (outcome == TAKEN) ? ST : SN;
+  bool update_global = true;
   if (global_branch_history != local_branch_history)
   {
-    if (global_branch_history == outcome)
+    if (score == ST)
+    {
+      uint8_t global_bias = score - global_branch_history;
+      uint8_t local_bias = score - local_branch_history;
+      if (global_bias < local_bias)
+      {
+        update_global = true;
+      }
+      else
+      {
+        update_global = false;
+      }
+    }
+    else
+    {
+      uint8_t global_bias = global_branch_history - score;
+      uint8_t local_bias = local_branch_history - score;
+      if (global_bias < local_bias)
+      {
+        update_global = true;
+      }
+      else
+      {
+        update_global = false;
+      }
+    }
+    if (update_global)
     {
       switch (choicer[choicer_index])
       {
