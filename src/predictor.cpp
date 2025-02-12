@@ -31,8 +31,8 @@ int verbose;
 
 //Tournament bits.
 int ghistoryBits_tournament = 16;
-int lhistoryBits = 12;
-int pcIndexBits = 12;
+int lhistoryBits = 14;
+int pcIndexBits = 10;
 int choicerBits = 15;
 
 //------------------------------------//
