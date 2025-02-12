@@ -40,7 +40,7 @@ int predBits = 3;
 int tagBits = 8;
 int uBits = 2;
 int tagepcBits = 13;
-int tageIndexBits = 12;
+int tageIndexBits = 16;
 int historyBaseBits = 4;
 
 //------------------------------------//
