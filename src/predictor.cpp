@@ -382,19 +382,19 @@ uint32_t index_hash(uint32_t pc, uint32_t history, int number)
 {
   if (number == 1)
   {
-    return ((pc * 31) ^ ((history & 0xF) * 17)) & 0xFF;
+    return ((pc * 31) ^ ((history & 0xF) * 17)) & 0xFFF;
   }
   if (number == 2)
   {
-    return ((pc * 31) ^ ((history & 0xFF) * 17)) & 0xFF;
+    return ((pc * 31) ^ ((history & 0xFF) * 17)) & 0xFFF;
   }
   if (number == 3)
   {
-    return ((pc * 31) ^ ((history & 0xFFFF) * 17)) & 0xFF;
+    return ((pc * 31) ^ ((history & 0xFFFF) * 17)) & 0xFFF;
   }
   if (number == 4)
   {
-    return ((pc * 31) ^ (history * 17)) & 0xFF;
+    return ((pc * 31) ^ (history * 17)) & 0xFFF;
   }
   return 0;
 }
@@ -426,10 +426,10 @@ void init_TAGE()
   int base_predictor_entries = 1 << tagepcBits;
   int tagged_predictor_entries = 1 << tageIndexBits;
   T_0 = (uint8_t *)malloc(base_predictor_entries * sizeof(uint8_t));
-  T_1 = (tagged_predictor *)malloc(base_predictor_entries * sizeof(tagged_predictor));
-  T_2 = (tagged_predictor *)malloc(base_predictor_entries * sizeof(tagged_predictor));
-  T_3 = (tagged_predictor *)malloc(base_predictor_entries * sizeof(tagged_predictor));
-  T_4 = (tagged_predictor *)malloc(base_predictor_entries * sizeof(tagged_predictor));
+  T_1 = (tagged_predictor *)malloc(tagged_predictor_entries * sizeof(tagged_predictor));
+  T_2 = (tagged_predictor *)malloc(tagged_predictor_entries * sizeof(tagged_predictor));
+  T_3 = (tagged_predictor *)malloc(tagged_predictor_entries * sizeof(tagged_predictor));
+  T_4 = (tagged_predictor *)malloc(tagged_predictor_entries * sizeof(tagged_predictor));
   int i = 0;
   for (i = 0; i < base_predictor_entries; i++)
   {
